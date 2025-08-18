@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+:root {
+  --color-bg-start: #0F0C29;
+  --color-bg-mid: #302B63;
+  --color-bg-end: #24243E;
+
+  --background-image-dark-gradient: linear-gradient(180deg, var(--color-bg-start) 0%, var(--color-bg-mid) 50%, var(--color-bg-end) 100%);
+}
+
+@layer utilities {
+  .bg-dark-gradient {
+    background-image: var(--background-image-dark-gradient);
+  }
+}
