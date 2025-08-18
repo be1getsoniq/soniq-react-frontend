@@ -6,6 +6,14 @@ export default function ArtistSearch() {
   const [results, setResults] = useState([]);
   const [source, setSource] = useState("apple");
   let mappedData;
+  let BASE_URL = import.meta.env.VITE_dev_base_url;
+  console.log(" BASE URL SET TO : ", BASE_URL);
+
+  if(import.meta.env.VITE_enviornment === "prod"){
+    BASE_URL = import.meta.env.VITE_prod_base_url;
+     console.log(" BASE URL SET TO : ", BASE_URL);  
+  }
+
   const handleSearch = async () => {
     if (!query) return;
 
@@ -15,7 +23,7 @@ export default function ArtistSearch() {
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbWVjZGRqMngwMDAwaDVvN2R4MDY5YmU2IiwiZW1haWwiOiJhZG1pbkBnZXRzb25pcS5hcHAiLCJpYXQiOjE3NTUyNzAyOTUsImV4cCI6MTc1NTg3NTA5NX0.Jb_JEnBWGV4gZKkxOEQaCUHled7uZ0wPNsUmm8X82rQ";
 
       const resp = await axios.get(
-        `http://localhost:3000/api/${source}/search?q=${query}`,
+        `{BASE_URL}/api/${source}/search?q=${query}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
