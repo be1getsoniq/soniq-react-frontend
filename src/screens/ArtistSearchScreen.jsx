@@ -9,9 +9,16 @@ export default function ArtistSearch() {
   let BASE_URL = import.meta.env.VITE_dev_base_url;
   console.log(" BASE URL SET TO : ", BASE_URL);
 
-  if(import.meta.env.VITE_enviornment === "prod"){
+  if (import.meta.env.VITE_enviornment === "prod") {
     BASE_URL = import.meta.env.VITE_prod_base_url;
-     console.log(" BASE URL SET TO : ", BASE_URL);  
+    console.log(" BASE URL SET TO : ", BASE_URL);
+  }
+
+  async function getToken() {
+    const resp = await axios.get(
+      `${BASE_URL}/api/auth/token/cmecddj2x0000h5o7dx069be6`
+    );
+    return resp.data.token;
   }
 
   const handleSearch = async () => {
@@ -19,11 +26,12 @@ export default function ArtistSearch() {
 
     // const resp = await axios.get(`/search?artistName=${query}`);
     try {
-      const token =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbWVjZGRqMngwMDAwaDVvN2R4MDY5YmU2IiwiZW1haWwiOiJhZG1pbkBnZXRzb25pcS5hcHAiLCJpYXQiOjE3NTUyNzAyOTUsImV4cCI6MTc1NTg3NTA5NX0.Jb_JEnBWGV4gZKkxOEQaCUHled7uZ0wPNsUmm8X82rQ";
+      const token = await getToken();
+
+      console.log("token received : ", token);
 
       const resp = await axios.get(
-        `{BASE_URL}/api/${source}/search?q=${query}`,
+        `${BASE_URL}/api/${source}/search?q=${query}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -31,33 +39,34 @@ export default function ArtistSearch() {
         }
       );
 
-      console.log("query : ", query);
+      console.log("resp : ", resp.data.artists);
+      
+      if (resp.data?.artists?.length) {
+        console.log("🎤 First artist:", resp.data.artists[0]);
 
-      console.log("resp : ", resp.data.artists[0]);
 
-      if (source == "apple") {
-        console.log("hellow");
-        console.log("raw artist object:", resp.data.artists[0]);
+        if (source === "apple") {
+          mappedData = resp.data.artists.map((artist, idx) => {
+            console.log("🎶 Artist name →", artist.attributes?.name);
+            console.log("url : ", artist.attributes?.artwork?.url);
 
-        mappedData = resp.data.artists.map((artist, idx) => {
-          console.log("artist name →", artist.name);
-
-          return {
+            return {
+              id: idx,
+              artistName: artist.attributes?.name ?? null,
+              url: artist.attributes?.url ?? null,
+              image_url: artist?.attributes?.artwork?.url ?? null,
+              genre: artist.attributes?.genreNames?.[0] ?? null,
+            };
+          });
+        } else {
+          mappedData = resp.data.artists.map((artist, idx) => ({
             id: idx,
-            artistName: artist.attributes.name ?? null,
-            url: artist.attributes.url ?? null,
-            image_url: getAppleArtworkUrl(artist.attributes.artwork?.url, 400) ?? null,
-            genre: artist.attributes.genreNames?.[0] ?? null,
-          };
-        });
-      } else {
-        mappedData = resp.data.artists.map((artist,idx) => ({
-          id: idx,
-          artistName: artist.name,
-          url: artist.external_urls.spotify,
-          image_url: artist.images[1].url,
-          genre: artist.genres?.[0] ?? null,
-        }));
+            artistName: artist.name,
+            url: artist.external_urls.spotify,
+            image_url: artist.images[1].url,
+            genre: artist.genres?.[0] ?? null,
+          }));
+        }
       }
       console.log(mappedData);
       console.log(resp.data.artists);
@@ -70,6 +79,8 @@ export default function ArtistSearch() {
   };
 
   const getAppleArtworkUrl = (rawUrl, size = 400) => {
+    console.log("raw ur; : ", rawUrl);
+
     return rawUrl.replace("{w}", size).replace("{h}", size);
   };
 
@@ -108,7 +119,7 @@ export default function ArtistSearch() {
               if (value.trim() !== "") {
                 handleSearch(value);
               }
-            }, 3000);
+            }, 2600);
           }}
           placeholder="Enter artist name"
           className="
@@ -142,7 +153,7 @@ export default function ArtistSearch() {
 
               {artist.image_url && (
                 <img
-                  src={artist.image_url}
+                  src={getAppleArtworkUrl(artist.image_url,400)}
                   alt={artist.artistName}
                   className="mt-2 rounded-md mx-auto"
                 />
