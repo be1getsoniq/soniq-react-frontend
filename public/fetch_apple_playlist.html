@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Apple Music Playlists</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 20px;
+        background: #f8f8f8;
+        color: #333;
+      }
+      h1 {
+        text-align: center;
+        color: #ff2f56;
+      }
+      #loader {
+        display: none;
+        font-weight: bold;
+        color: #ff2f56;
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      button {
+        display: block;
+        margin: 0 auto 20px;
+        padding: 10px 20px;
+        font-size: 16px;
+        background: #ff2f56;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+      button:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+      }
+      .playlist {
+        background: white;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+      .playlist img {
+        width: 80px;
+        height: 80px;
+        border-radius: 8px;
+        object-fit: cover;
+        margin-right: 10px;
+      }
+      .playlist-header {
+        display: flex;
+        align-items: center;
+      }
+      .playlist h3 {
+        margin: 0;
+        font-size: 18px;
+      }
+      .songs {
+        margin-top: 10px;
+        padding-left: 20px;
+      }
+      .songs li {
+        font-size: 14px;
+        margin-bottom: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Apple Music Playlists</h1>
+    <div id="loader">Loading Apple Music Kit...</div>
+
+    <!-- Added Logout Button -->
+    <button id="logoutBtn" style="background: #888; margin-bottom: 10px">
+      Logout
+    </button>
+
+    <button id="loginBtn" disabled>Login with Apple Music</button>
+    <div id="playlists"></div>
+
+    <script src="https://js-cdn.music.apple.com/musickit/v1/musickit.js"></script>
+    <script>
+      const loader = document.getElementById("loader");
+      const loginBtn = document.getElementById("loginBtn");
+      const playlistsDiv = document.getElementById("playlists");
+      const logoutBtn = document.getElementById("logoutBtn");
+
+      loader.style.display = "block";
+
+      async function setupMusicKit() {
+        try {
+          console.log("[Setup] MusicKit detected:", !!window.MusicKit);
+
+          const tokenResp = await fetch(
+            "http://localhost:3000/api/apple/token/cme6r5bhm0000h5kop1q2rv27"
+          );
+          const { token: developerToken } = await tokenResp.json();
+          console.log("[Setup] Developer Token:", developerToken);
+
+          MusicKit.configure({
+            developerToken,
+            app: { name: "PlaylistFetcher", build: "1.0" },
+          });
+
+          const mkInstance = MusicKit.getInstance();
+
+          loginBtn.disabled = false;
+          loader.style.display = "none";
+
+          // Logout button: deauthorize and reset UI
+          logoutBtn.addEventListener("click", () => {
+            try {
+              const mkInstance = MusicKit.getInstance();
+              mkInstance.musicUserToken = null; // Clear the token
+              playlistsDiv.innerHTML = "";
+              alert("Logged out! Please reload the page and login again.");
+              loginBtn.disabled = false;
+            } catch (err) {
+              console.error("[Error] Logout failed:", err);
+              alert("Logout failed: " + err.message);
+            }
+          });
+
+          loginBtn.addEventListener("click", async () => {
+            console.log("[Click] Login button clicked");
+            try {
+              const musicUserToken = await mkInstance.authorize();
+              console.log("[Auth] Music User Token:", musicUserToken);
+
+              const resp = await fetch(
+                "https://api.music.apple.com/v1/me/library/playlists",
+                {
+                  headers: {
+                    Authorization: `Bearer ${developerToken}`,
+                    "Music-User-Token": musicUserToken,
+                  },
+                }
+              );
+
+              const data = await resp.json();
+              console.log("[API] Playlists:", data);
+
+              playlistsDiv.innerHTML = "";
+
+              if (data.data && data.data.length) {
+                for (const pl of data.data) {
+                  const plDiv = document.createElement("div");
+                  plDiv.className = "playlist";
+
+                  // Playlist header
+                  const header = document.createElement("div");
+                  header.className = "playlist-header";
+
+                  const img = document.createElement("img");
+                  img.src =
+                    pl.attributes.artwork?.url?.replace("{w}x{h}", "200x200") ||
+                    "";
+                  header.appendChild(img);
+
+                  const title = document.createElement("h3");
+                  title.textContent = pl.attributes.name;
+                  header.appendChild(title);
+
+                  plDiv.appendChild(header);
+
+                  // Fetch songs for the playlist
+                  try {
+                    const songsResp = await fetch(
+                      `https://api.music.apple.com${pl.href}/tracks`,
+                      {
+                        headers: {
+                          Authorization: `Bearer ${developerToken}`,
+                          "Music-User-Token": musicUserToken,
+                        },
+                      }
+                    );
+
+                    const songsData = await songsResp.json();
+                    console.log(
+                      `[API] Songs for "${pl.attributes.name}":`,
+                      songsData
+                    );
+
+                    if (songsData.data && songsData.data.length) {
+                      const ul = document.createElement("ul");
+                      ul.className = "songs";
+
+                      songsData.data.forEach((song) => {
+                        const {
+                          name,
+                          artistName,
+                          albumName,
+                          genreNames = [],
+                          releaseDate,
+                          durationInMillis,
+                          artwork,
+                        } = song.attributes;
+
+                        const li = document.createElement("li");
+
+                        // Create song card container
+                        const songCard = document.createElement("div");
+                        songCard.style.display = "flex";
+                        songCard.style.alignItems = "center";
+                        songCard.style.marginBottom = "10px";
+                        songCard.style.background = "#fafafa";
+                        songCard.style.padding = "8px";
+                        songCard.style.borderRadius = "6px";
+                        songCard.style.boxShadow = "0 1px 4px rgba(0,0,0,0.1)";
+
+                        // Album artwork
+                        if (artwork?.url) {
+                          const img = document.createElement("img");
+                          img.src = artwork.url.replace("{w}x{h}", "100x100");
+                          img.alt = albumName || name;
+                          img.style.width = "60px";
+                          img.style.height = "60px";
+                          img.style.objectFit = "cover";
+                          img.style.borderRadius = "4px";
+                          img.style.marginRight = "10px";
+                          songCard.appendChild(img);
+                        }
+
+                        // Song details container
+                        const detailsDiv = document.createElement("div");
+
+                        const titleEl = document.createElement("strong");
+                        titleEl.textContent = name;
+                        detailsDiv.appendChild(titleEl);
+
+                        const artistEl = document.createElement("div");
+                        artistEl.textContent = `Artist: ${artistName}`;
+                        detailsDiv.appendChild(artistEl);
+
+                        if (albumName) {
+                          const albumEl = document.createElement("div");
+                          albumEl.textContent = `Album: ${albumName}`;
+                          detailsDiv.appendChild(albumEl);
+                        }
+
+                        if (genreNames.length) {
+                          const genreEl = document.createElement("div");
+                          genreEl.textContent = `Genre: ${genreNames.join(
+                            ", "
+                          )}`;
+                          detailsDiv.appendChild(genreEl);
+                        }
+
+                        if (releaseDate) {
+                          const releaseEl = document.createElement("div");
+                          releaseEl.textContent = `Released: ${releaseDate}`;
+                          detailsDiv.appendChild(releaseEl);
+                        }
+
+                        if (durationInMillis) {
+                          const mins = Math.floor(durationInMillis / 60000);
+                          const secs = Math.floor(
+                            (durationInMillis % 60000) / 1000
+                          );
+                          const durationEl = document.createElement("div");
+                          durationEl.textContent = `Duration: ${mins}:${secs
+                            .toString()
+                            .padStart(2, "0")}`;
+                          detailsDiv.appendChild(durationEl);
+                        }
+
+                        songCard.appendChild(detailsDiv);
+                        li.appendChild(songCard);
+                        ul.appendChild(li);
+                      });
+
+                      plDiv.appendChild(ul);
+                    } else {
+                      const p = document.createElement("p");
+                      p.textContent = "No songs found.";
+                      plDiv.appendChild(p);
+                    }
+                  } catch (err) {
+                    console.error(
+                      `[Error] Fetching songs for "${pl.attributes.name}":`,
+                      err
+                    );
+                  }
+
+                  playlistsDiv.appendChild(plDiv);
+                }
+              } else {
+                playlistsDiv.textContent = "No playlists found.";
+              }
+            } catch (err) {
+              console.error("[Error] Login/Playlist Fetch failed:", err);
+              alert("Error: " + err.message);
+            }
+          });
+        } catch (err) {
+          console.error("[Error] MusicKit setup failed:", err);
+          loader.textContent = "Failed to load MusicKit.";
+        }
+      }
+
+      if (window.MusicKit) {
+        setupMusicKit();
+      } else {
+        document.addEventListener("musickitloaded", () => {
+          console.log("[Event] musickitloaded fired");
+          setupMusicKit();
+        });
+      }
+    </script>
+  </body>
+</html>
