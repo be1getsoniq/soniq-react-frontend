@@ -1,19 +1,13 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { getBaseUrl } from "../utils/helper";
 
 export default function ArtistSearch() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [source, setSource] = useState("apple");
   let mappedData;
-  let BASE_URL = import.meta.env.VITE_dev_base_url;
-  console.log(" BASE URL SET TO : ", BASE_URL);
-
-  if (import.meta.env.VITE_enviornment === "prod") {
-    BASE_URL = import.meta.env.VITE_prod_base_url;
-    console.log(" BASE URL SET TO : ", BASE_URL);
-  }
-
+  let BASE_URL = getBaseUrl();
   async function getToken() {
     const resp = await axios.get(
       `${BASE_URL}/api/auth/token/cmecddj2x0000h5o7dx069be6`
@@ -40,10 +34,9 @@ export default function ArtistSearch() {
       );
 
       console.log("resp : ", resp.data.artists);
-      
+
       if (resp.data?.artists?.length) {
         console.log("🎤 First artist:", resp.data.artists[0]);
-
 
         if (source === "apple") {
           mappedData = resp.data.artists.map((artist, idx) => {
@@ -153,7 +146,7 @@ export default function ArtistSearch() {
 
               {artist.image_url && (
                 <img
-                  src={getAppleArtworkUrl(artist.image_url,400)}
+                  src={getAppleArtworkUrl(artist.image_url, 400)}
                   alt={artist.artistName}
                   className="mt-2 rounded-md mx-auto"
                 />

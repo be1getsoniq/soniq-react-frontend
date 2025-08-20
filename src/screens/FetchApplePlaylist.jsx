@@ -1,4 +1,7 @@
 import { useEffect, useState } from "react";
+import { getBaseUrl } from "../utils/helper";
+
+const BASE_URL = getBaseUrl();
 
 export default function AppleMusicPlaylists() {
   const [loading, setLoading] = useState(true);
@@ -6,7 +9,7 @@ export default function AppleMusicPlaylists() {
 
   const setupMusicKit = async () => {
     try {
-      const tokenResp = await fetch("http://localhost:3000/api/apple/token/");
+      const tokenResp = await fetch(`${BASE_URL}/api/apple/token/`);
       const { token: developerToken } = await tokenResp.json();
 
       window.MusicKit.configure({ developerToken, app: { name: "PlaylistFetcher", build: "1.0" } });

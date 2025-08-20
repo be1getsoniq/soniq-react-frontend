@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import BottomNav from "../components/BottomNav";
 import darkCity from "../assets/foryou.png";
+import { getBaseUrl } from "../utils/helper";
+
+const BASE_URL = getBaseUrl();
 
 export default function ForYouScreen() {
   const [artists, setArtists] = useState([]);
@@ -69,7 +72,7 @@ export default function ForYouScreen() {
     const fetchSpotifyData = async () => {
       try {
         const response = await fetch(
-          "http://localhost:3000/api/spotify/fetchspotify/cmd8w76dr0000h5tn3n34dogr"
+          `${BASE_URL}/api/spotify/fetchspotify/cmd8w76dr0000h5tn3n34dogr`
         );
         const data = await response.json();
         console.log(data);
