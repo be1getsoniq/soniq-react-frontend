@@ -166,7 +166,7 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-purple-500 to-pink-500 flex flex-col items-center justify-center p-6">
-      <h1 className="text-4xl font-bold text-white mb-10">Music Auth Demo</h1>
+      <h1 className="text-4xl font-bold text-white mb-10">Soniq Login Demo</h1>
 
       {error && (
         <div className="bg-red-100 text-red-700 p-4 rounded mb-6 w-full max-w-md text-center">
