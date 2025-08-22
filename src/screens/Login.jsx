@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { getCallBackUri, getSpotifyClientId } from "../utils/helper";
+import { useNavigate } from "react-router-dom";
 
 const CLIENT_ID = getSpotifyClientId();
 const callbackBaseUrl = getCallBackUri();
@@ -30,6 +31,7 @@ const Login = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loggedIn, setLoggedIn] = useState(false);
+  const navigate = useNavigate();
 
 
   
@@ -120,6 +122,7 @@ const Login = () => {
       const mkInstance = window.MusicKit.getInstance();
       const userToken = await mkInstance.authorize();
       setLoggedIn(true);
+      navigate('/artistsearch');
 
     } catch (err) {
       console.error("Login failed:", err);
