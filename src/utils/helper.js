@@ -22,7 +22,7 @@ export function getCallBackUri() {
   let callback_url = import.meta.env.VITE_dev_callback_base_uri;
 
     if (import.meta.env.VITE_enviornment === "prod") {
-      base_url = import.meta.env.VITE_prod_callback_base_uri;
+      callback_url = import.meta.env.VITE_prod_callback_base_uri;
     }
     return callback_url;
 }
