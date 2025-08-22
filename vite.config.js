@@ -7,6 +7,6 @@ export default defineConfig({
   server: {
     host: true, // Allow external connections
     port: 5173, // Same as your vite dev server port
-    allowedHosts: ['.loca.lt'], // Allow any loca.lt tunnel
+    allowedHosts: ['.loca.lt', '8c2a5d3fbb02.ngrok-free.app'], // Allow any loca.lt tunnel
   },
 })

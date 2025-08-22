@@ -1,106 +1,144 @@
 import { useEffect, useState } from "react";
-import { getBaseUrl } from "../utils/helper";
-
-const BASE_URL = getBaseUrl();
 
 export default function AppleMusicPlaylists() {
   const [loading, setLoading] = useState(true);
   const [playlists, setPlaylists] = useState([]);
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [developerToken, setDeveloperToken] = useState(null);
+  const [musicUserToken, setMusicUserToken] = useState(null);
+
+  // Load MusicKit script dynamically
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://js-cdn.music.apple.com/musickit/v1/musickit.js";
+    script.onload = () => {
+      console.log("MusicKit loaded");
+      setupMusicKit();
+    };
+    document.body.appendChild(script);
+  }, []);
 
   const setupMusicKit = async () => {
     try {
-      const tokenResp = await fetch(`${BASE_URL}/api/apple/token/`);
-      const { token: developerToken } = await tokenResp.json();
+      const tokenResp = await fetch("http://localhost:3000/api/apple/token/cme6r5bhm0000h5kop1q2rv27");
+      const { token } = await tokenResp.json();
+      setDeveloperToken(token);
 
-      window.MusicKit.configure({ developerToken, app: { name: "PlaylistFetcher", build: "1.0" } });
-      const mkInstance = window.MusicKit.getInstance();
-      setLoading(false);
-
-      const musicUserToken = await mkInstance.authorize();
-
-      const resp = await fetch("https://api.music.apple.com/v1/me/library/playlists", {
-        headers: { Authorization: `Bearer ${developerToken}`, "Music-User-Token": musicUserToken }
+      window.MusicKit.configure({
+        developerToken: token,
+        app: { name: "PlaylistFetcher", build: "1.0" },
       });
-      const data = await resp.json();
-      setPlaylists(data.data || []);
+
+      setLoading(false);
     } catch (err) {
-      console.error(err);
+      console.error("MusicKit setup failed:", err);
+      setLoading(false);
+    }
+  };
+
+  const handleLogin = async () => {
+    try {
+      const mkInstance = window.MusicKit.getInstance();
+      const userToken = await mkInstance.authorize();
+      setMusicUserToken(userToken);
+      setLoggedIn(true);
+      fetchPlaylists(userToken);
+    } catch (err) {
+      console.error("Login failed:", err);
       alert(err.message);
     }
   };
 
-  useEffect(() => {
-    if (window.MusicKit) {
-      setupMusicKit();
-    } else {
-      document.addEventListener("musickitloaded", setupMusicKit);
-    }
-  }, []);
+  const handleLogout = () => {
+    const mkInstance = window.MusicKit.getInstance();
+    mkInstance.musicUserToken = null;
+    setLoggedIn(false);
+    setPlaylists([]);
+    setMusicUserToken(null);
+    alert("Logged out!");
+  };
 
-  return (
-    <div className="p-4 bg-gray-50 text-gray-900">
-      <h1 className="text-center text-2xl font-bold text-red-500 mb-4">Apple Music Playlists</h1>
-      {loading && <div className="text-center font-semibold text-red-500 mb-4">Loading Apple Music Kit...</div>}
-      {!loading && (
-        <div>
-          {playlists.length ? (
-            playlists.map((pl) => (
-              <div key={pl.id} className="bg-white rounded-lg p-4 mb-4 shadow">
-                <div className="flex items-center mb-2">
-                  {pl.attributes.artwork?.url && (
-                    <img alt={pl.attributes.name} className="w-20 h-20 rounded mr-2" src={pl.attributes.artwork.url.replace("{w}x{h}", "200x200")} />
-                  )}
-                  <h3 className="text-lg font-semibold">{pl.attributes.name}</h3>
-                </div>
-                <PlaylistSongs href={pl.href} devToken={window.MusicKit.getInstance().developerToken} />
-              </div>
-            ))
-          ) : (
-            <p>No playlists found.</p>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function PlaylistSongs({ href, devToken }) {
-  const [songs, setSongs] = useState([]);
-
-  useEffect(() => {
-    const fetchSongs = async () => {
-      const mkInstance = window.MusicKit.getInstance();
-      const musicUserToken = mkInstance.musicUserToken;
-      const resp = await fetch(`https://api.music.apple.com${href}/tracks`, {
+  const fetchPlaylists = async (userToken) => {
+    try {
+      const resp = await fetch("https://api.music.apple.com/v1/me/library/playlists", {
         headers: {
-          Authorization: `Bearer ${devToken}`,
-          "Music-User-Token": musicUserToken
-        }
+          Authorization: `Bearer ${developerToken}`,
+          "Music-User-Token": userToken,
+        },
       });
       const data = await resp.json();
-      setSongs(data.data || []);
-    };
-    fetchSongs();
-  }, [href, devToken]);
-
-  if (!songs.length) return <p>No songs found.</p>;
+      setPlaylists(data.data || []);
+    } catch (err) {
+      console.error("Failed to fetch playlists:", err);
+    }
+  };
 
   return (
-    <ul className="mt-2 pl-4">
-      {songs.map((song) => (
-        <li key={song.id} className="mb-2">
-          <div className="flex items-center bg-gray-100 p-2 rounded shadow">
-            {song.attributes.artwork?.url && (
-              <img className="w-14 h-14 object-cover rounded mr-2" src={song.attributes.artwork.url.replace("{w}x{h}", "100x100")} alt={song.attributes.albumName || song.attributes.name} />
-            )}
-            <div>
-              <strong>{song.attributes.name}</strong>
-              <div>Artist: {song.attributes.artistName}</div>
-              {song.attributes.albumName && <div>Album: {song.attributes.albumName}</div>}
+    <div style={{ padding: 20, fontFamily: "sans-serif", background: "#f8f8f8" }}>
+      <h1 style={{ textAlign: "center", color: "#ff2f56" }}>Apple Music Playlists</h1>
+      {loading && <div style={{ color: "#ff2f56", fontWeight: "bold" }}>Loading Apple Music Kit...</div>}
+
+      {!loading && (
+        <>
+          <button
+            onClick={handleLogin}
+            disabled={loggedIn}
+            style={{
+              display: "block",
+              margin: "10px auto",
+              padding: "10px 20px",
+              background: "#ff2f56",
+              color: "white",
+              border: "none",
+              borderRadius: 8,
+              cursor: loggedIn ? "not-allowed" : "pointer",
+            }}
+          >
+            Login with Apple Music
+          </button>
+          {loggedIn && (
+            <button
+              onClick={handleLogout}
+              style={{
+                display: "block",
+                margin: "10px auto",
+                padding: "10px 20px",
+                background: "#888",
+                color: "white",
+                border: "none",
+                borderRadius: 8,
+              }}
+            >
+              Revoke Access 
+              
+            </button>
+          )}
+        </>
+      )}
+
+      <div>
+        {playlists.map((pl) => (
+          <div
+            key={pl.id}
+            style={{
+              background: "white",
+              borderRadius: 8,
+              padding: 15,
+              marginBottom: 20,
+              boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <img
+                src={pl.attributes.artwork?.url?.replace("{w}x{h}", "200x200") || ""}
+                alt={pl.attributes.name}
+                style={{ width: 80, height: 80, borderRadius: 8, objectFit: "cover", marginRight: 10 }}
+              />
+              <h3>{pl.attributes.name}</h3>
             </div>
           </div>
-        </li>
-      ))}
-    </ul>
+        ))}
+      </div>
+    </div>
   );
 }

@@ -10,6 +10,8 @@ import ArtistSearch from "./screens/ArtistSearchScreen.jsx";
 import FetchApplePlaylist from "./screens/FetchApplePlaylist.jsx";
 
 import "./App.css";
+import ArtistAlbums from "./screens/ArtistAlbums.jsx";
+import Login from "./screens/Login.jsx";
 
 export default function App() {
   return (
@@ -21,7 +23,8 @@ export default function App() {
           <Route path="/foryou" element={<ForYouScreen />} />
           <Route path="/artistsearch" element={<ArtistSearch/>} />
           <Route path="/applefetchplaylist" element={<FetchApplePlaylist/> } />
-
+          <Route path="/artistAlbums" element={<ArtistAlbums/>} />
+          <Route path="/login" element={<Login/>} />
         </Routes>
       </Router>
     </div>
