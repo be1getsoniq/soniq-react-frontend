@@ -8,6 +8,8 @@ const callbackBaseUrl = getCallBackUri();
 // const REDIRECT_URI = "https://8c2a5d3fbb02.ngrok-free.app/artistsearch";
 
 const REDIRECT_URI = `${callbackBaseUrl}/artistsearch`;
+console.log(REDIRECT_URI);
+
 
 const SPOTIFY_SCOPES = [
   "user-read-private",
