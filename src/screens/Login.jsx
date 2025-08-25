@@ -1,15 +1,18 @@
 import React, { useEffect, useState } from "react";
-import { getCallBackUri, getSpotifyClientId } from "../utils/helper";
+import { getCallBackUri, getSpotifyClientId, getBaseUrl } from "../utils/helper";
 import { useNavigate } from "react-router-dom";
 
 const CLIENT_ID = getSpotifyClientId();
 const callbackBaseUrl = getCallBackUri();
-
+const baseUrl = getBaseUrl();
 // const REDIRECT_URI = "https://soniqfrontend.loca.lt/artistsearch";
 // const REDIRECT_URI = "https://8c2a5d3fbb02.ngrok-free.app/artistsearch";
 
 const REDIRECT_URI = `${callbackBaseUrl}/artistsearch`;
 console.log(REDIRECT_URI);
+
+console.log(" GET base url : ", baseUrl);
+
 
 
 const SPOTIFY_SCOPES = [
@@ -140,7 +143,7 @@ const Login = () => {
 
   const setupMusicKit = async () => {
     try {
-      const tokenResp = await fetch("http://localhost:3000/api/apple/token/cme6r5bhm0000h5kop1q2rv27");
+      const tokenResp = await fetch(`${baseUrl}/api/apple/token/cme6r5bhm0000h5kop1q2rv27`);
       let { token } = await tokenResp.json();
       setAppleToken(token);
       console.log("token : ", token );
