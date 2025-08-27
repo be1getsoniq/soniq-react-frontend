@@ -8,6 +8,8 @@ import PreferencesScreen from "./screens/PreferencesScreen.jsx";
 import ForYouScreen from "./screens/ForYouScreen.jsx";
 import ArtistSearch from "./screens/ArtistSearchScreen.jsx";
 import FetchApplePlaylist from "./screens/FetchApplePlaylist.jsx";
+import AppleMusic from "./screens/AppleLogin.jsx";
+
 
 import "./App.css";
 import ArtistAlbums from "./screens/ArtistAlbums.jsx";
@@ -25,6 +27,7 @@ export default function App() {
           <Route path="/applefetchplaylist" element={<FetchApplePlaylist/> } />
           <Route path="/artistAlbums" element={<ArtistAlbums/>} />
           <Route path="/login" element={<Login/>} />
+          <Route path="/applemusic" element={<AppleMusic/>} />
         </Routes>
       </Router>
     </div>

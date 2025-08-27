@@ -86,11 +86,14 @@ export default function ArtistSearch() {
 
   const handleSearch = async () => {
     if (!query) return;
-
+    console.log(`${BASE_URL}/api/${source}/artists/albums`);
+    console.log(`${BASE_URL}/api/auth/token/${userId}`);
+    
+    
     try {
       const token = await getToken();
 
-      // console.log("token received : ", token);
+      console.log("token received : ", token);
 
       const resp = await axios.get(
         `${BASE_URL}/api/${source}/search?q=${query}`,
@@ -134,23 +137,28 @@ export default function ArtistSearch() {
       <div>
         <div className="flex gap-2 mb-4">
           <button
-            className={`px-4 py-2 rounded ${
-              source === "spotify" ? "bg-gray-300" : "bg-gray-100"
+            className={`px-4 py-2 rounded transition ${
+              source === "spotify"
+                ? "bg-green-600 text-white"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
             }`}
             onClick={() => setSource("spotify")}
           >
             Spotify
           </button>
+
           <button
-            className={`px-4 py-2 rounded ${
-              source === "apple" ? "bg-gray-300" : "bg-gray-100"
+            className={`px-4 py-2 rounded transition ${
+              source === "apple"
+                ? "bg-green-600 text-white"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
             }`}
             onClick={() => setSource("apple")}
           >
             Apple
           </button>
         </div>
-
+          <p className="text-white font-semibold pb-3">{source} Search</p>
         <input
           value={query}
           onChange={(e) => {
