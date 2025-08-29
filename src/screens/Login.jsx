@@ -8,7 +8,7 @@ const baseUrl = getBaseUrl();
 // const REDIRECT_URI = "https://soniqfrontend.loca.lt/artistsearch";
 // const REDIRECT_URI = "https://8c2a5d3fbb02.ngrok-free.app/artistsearch";
 
-const REDIRECT_URI = `${callbackBaseUrl}/artistsearch`;
+const REDIRECT_URI = `${callbackBaseUrl}/api/callback/spotify`;
 console.log(REDIRECT_URI);
 
 console.log(" GET base url : ", baseUrl);

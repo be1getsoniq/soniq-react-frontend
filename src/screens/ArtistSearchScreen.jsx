@@ -86,6 +86,7 @@ export default function ArtistSearch() {
 
   const handleSearch = async () => {
     if (!query) return;
+    
     console.log(`${BASE_URL}/api/${source}/artists/albums`);
     console.log(`${BASE_URL}/api/auth/token/${userId}`);
     
